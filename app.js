@@ -16,8 +16,11 @@ const refs = {
   savedPatients: $('savedPatients'),
   savedCount: $('savedCount'),
   selectedCount: $('selectedCount'),
+  selectedCountAdmin: $('selectedCountAdmin'),
   severityNow: $('severityNow'),
+  severityNowAdmin: $('severityNowAdmin'),
   categoryTotal: $('categoryTotal'),
+  categoryTotalAdmin: $('categoryTotalAdmin'),
   statusText: $('statusText'),
   metaText: $('metaText'),
   categoryContainer: $('categoryContainer'),
@@ -204,9 +207,13 @@ function renderCategories() {
 
 function updateHeader() {
   const count = state.selected.size;
-  refs.selectedCount.textContent = count;
-  refs.severityNow.textContent = currentSeverity(count);
-  refs.categoryTotal.textContent = categories.filter(c => getCategorySelectedCount(c) > 0).length;
+  if (refs.selectedCount) refs.selectedCount.textContent = count;
+  if (refs.selectedCountAdmin) refs.selectedCountAdmin.textContent = count;
+  if (refs.severityNow) refs.severityNow.textContent = currentSeverity(count);
+  if (refs.severityNowAdmin) refs.severityNowAdmin.textContent = currentSeverity(count);
+  const categoryCount = categories.filter(c => getCategorySelectedCount(c) > 0).length;
+  if (refs.categoryTotal) refs.categoryTotal.textContent = categoryCount;
+  if (refs.categoryTotalAdmin) refs.categoryTotalAdmin.textContent = categoryCount;
   refs.metaText.textContent = `${categories.length}カテゴリ / 82項目`;
 }
 
@@ -588,10 +595,12 @@ setStatus('保存機能・前回比較機能付きで起動しました。');
   function isUnlocked(){ return Number(localStorage.getItem(key()) || 0) > Date.now(); }
   function show(){
     refs2.adminSummary.hidden = false;
+    if (refs2.adminSummary) refs2.adminSummary.hidden = false;
     refs2.adminToolbar.hidden = false;
     refs2.adminButtons.hidden = false;
     refs2.resultBtn.hidden = false;
     refs2.adminSummary.classList.add('admin-visible');
+    if (refs2.adminSummary) refs2.adminSummary.classList.add('admin-visible');
     refs2.adminToolbar.classList.add('admin-visible');
     refs2.adminButtons.classList.add('admin-visible');
     refs2.resultBtn.classList.add('admin-visible');
@@ -602,10 +611,12 @@ setStatus('保存機能・前回比較機能付きで起動しました。');
   }
   function hide(){
     refs2.adminSummary.hidden = true;
+    if (refs2.adminSummary) refs2.adminSummary.hidden = true;
     refs2.adminToolbar.hidden = true;
     refs2.adminButtons.hidden = true;
     refs2.resultBtn.hidden = true;
     refs2.adminSummary.classList.remove('admin-visible');
+    if (refs2.adminSummary) refs2.adminSummary.classList.remove('admin-visible');
     refs2.adminToolbar.classList.remove('admin-visible');
     refs2.adminButtons.classList.remove('admin-visible');
     refs2.resultBtn.classList.remove('admin-visible');

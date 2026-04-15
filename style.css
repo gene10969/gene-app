@@ -435,3 +435,22 @@ button::after {
 #adminSummary.admin-visible{
   display:grid !important;
 }
+
+
+/* admin menu bottom placement */
+.admin-bottom-panel{
+  margin-top:16px;
+}
+#adminSummary.admin-visible{
+  display:grid !important;
+}
+#adminToolbar.admin-visible{
+  display:grid !important;
+}
+#adminButtons.admin-visible{
+  display:flex !important;
+}
+#resultBtn.admin-visible{
+  display:inline-flex !important;
+  align-items:center;
+}
