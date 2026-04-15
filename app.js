@@ -14,12 +14,8 @@ const refs = {
   visitDate: $('visitDate'),
   patientSearch: $('patientSearch'),
   savedPatients: $('savedPatients'),
-  savedCount: $('savedCount'),
-  selectedCount: $('selectedCount'),
   selectedCountAdmin: $('selectedCountAdmin'),
-  severityNow: $('severityNow'),
   severityNowAdmin: $('severityNowAdmin'),
-  categoryTotal: $('categoryTotal'),
   categoryTotalAdmin: $('categoryTotalAdmin'),
   statusText: $('statusText'),
   metaText: $('metaText'),
@@ -151,7 +147,6 @@ function filteredPatientNames() {
 function renderPatientChips() {
   const names = filteredPatientNames();
   refs.savedPatients.innerHTML = '';
-  if (refs.savedCount) refs.savedCount.textContent = `${patientNames().length}名`;
   if (!names.length) {
     refs.savedPatients.innerHTML = '<span class="history-meta">保存済み患者はまだありません。</span>';
     return;
@@ -210,12 +205,9 @@ function renderCategories() {
 
 function updateHeader() {
   const count = state.selected.size;
-  if (refs.selectedCount) refs.selectedCount.textContent = count;
   if (refs.selectedCountAdmin) refs.selectedCountAdmin.textContent = count;
-  if (refs.severityNow) refs.severityNow.textContent = currentSeverity(count);
   if (refs.severityNowAdmin) refs.severityNowAdmin.textContent = currentSeverity(count);
   const categoryCount = categories.filter(c => getCategorySelectedCount(c) > 0).length;
-  if (refs.categoryTotal) refs.categoryTotal.textContent = categoryCount;
   if (refs.categoryTotalAdmin) refs.categoryTotalAdmin.textContent = categoryCount;
   refs.metaText.textContent = `${categories.length}カテゴリ / 82項目`;
 }
@@ -357,6 +349,143 @@ function renderSelectedList(selectedSet = state.selected) {
   });
 }
 
+
+function getCategoryBreakdown(selectedSet = state.selected){
+  return categories.map(c => {
+    const selected = c.items.filter(item => selectedSet.has(item)).length;
+    return { name:c.name, selected, total:c.items.length, ratio:c.items.length ? selected / c.items.length : 0 };
+  });
+}
+
+function buildSummaryText(breakdown, total){
+  const active = breakdown.filter(x => x.selected > 0).sort((a,b) => b.selected - a.selected || b.ratio - a.ratio);
+  if (!active.length) {
+    return 'まだ選択項目がないため、自律神経との関連を含む詳細分析は表示されていません。';
+  }
+  const names = active.slice(0,3).map(v => `${v.name}（${v.selected}項目）`).join('、');
+  const nervous = active.some(v => ['頭・神経系','睡眠','精神・感情'].includes(v.name));
+  const body = active.some(v => ['心臓・血圧・循環','呼吸','消化器','皮膚・発汗','全身・体調'].includes(v.name));
+  let relation = '自律神経の乱れは、全身の不調として現れやすい状態です。';
+  if (nervous && body) relation = '頭・睡眠・感情面に加えて身体症状も出ており、自律神経のバランス低下が全身に影響している可能性があります。';
+  else if (nervous) relation = '睡眠・頭・気分に関わる項目が目立ち、自律神経の緊張が続いている可能性があります。';
+  else if (body) relation = '呼吸・循環・消化など身体面の反応が目立ち、自律神経の調整負担が高まっている可能性があります。';
+  return `今回のチェックでは合計${total}項目が選択されています。特に ${names} の比重が高く、${relation}`;
+}
+
+function buildComparisonText(currentRecord, prevRecord){
+  if (!prevRecord) {
+    return '前回データがまだないため、今回は初回データとして記録されます。今後は自律神経の不調がどの領域で増減したかを比較できます。';
+  }
+  const diff = currentRecord.total - prevRecord.total;
+  const direction = diff < 0 ? '減少' : diff > 0 ? '増加' : '同程度';
+  const currentMap = Object.fromEntries((currentRecord.categoryCounts || []).map(v => [v.name, v.selected]));
+  const prevMap = Object.fromEntries((prevRecord.categoryCounts || []).map(v => [v.name, v.selected]));
+  const deltas = categories.map(c => ({ name:c.name, diff:(currentMap[c.name] || 0) - (prevMap[c.name] || 0) }))
+    .filter(v => v.diff !== 0).sort((a,b) => Math.abs(b.diff) - Math.abs(a.diff));
+  if (!deltas.length) {
+    return `前回と比較すると合計チェック数は ${direction} で、自律神経に関わる症状の分布にも大きな変化はありません。`;
+  }
+  const main = deltas[0];
+  const sign = main.diff > 0 ? '増え' : '減り';
+  return `前回と比較すると合計チェック数は ${direction}（${diff > 0 ? '+' : ''}${diff}）です。特に ${main.name} が ${Math.abs(main.diff)}項目 ${sign}、自律神経の不調がこの領域で変化している可能性があります。`;
+}
+
+function renderTopCategoryList(breakdown){
+  refs.topCategoryList.innerHTML = '';
+  const active = breakdown.filter(x => x.selected > 0).sort((a,b) => b.selected - a.selected || b.ratio - a.ratio).slice(0,4);
+  if (!active.length) {
+    refs.topCategoryList.innerHTML = '<div class="top-category-item"><span>選択項目がまだありません。</span></div>';
+    return;
+  }
+  active.forEach(item => {
+    const el = document.createElement('div');
+    el.className = 'top-category-item';
+    const pct = Math.round(item.ratio * 100);
+    let desc = '自律神経との関連を確認したい領域です。';
+    if (['頭・神経系','睡眠','精神・感情'].includes(item.name)) desc = '自律神経の緊張や睡眠の質と関わりやすい領域です。';
+    if (['心臓・血圧・循環','呼吸','消化器','全身・体調'].includes(item.name)) desc = '自律神経の調整低下が身体反応として出やすい領域です。';
+    el.innerHTML = `<strong>${item.name}</strong><span>${item.selected} / ${item.total} 項目（比率 ${pct}%）</span><span>${desc}</span>`;
+    refs.topCategoryList.appendChild(el);
+  });
+}
+
+function drawDonutChart(currentRecord){
+  const canvas = refs.donutChart;
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const cssWidth = canvas.clientWidth || 360;
+  const cssHeight = cssWidth;
+  canvas.width = cssWidth * dpr;
+  canvas.height = cssHeight * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, cssWidth, cssHeight);
+
+  const cx = cssWidth / 2;
+  const cy = cssHeight / 2;
+  const outer = Math.min(cssWidth, cssHeight) * 0.34;
+  const inner = outer * 0.58;
+  const total = currentRecord.total || 0;
+  const breakdown = getCategoryBreakdown(new Set(currentRecord.selectedItems || []));
+  const active = breakdown.filter(v => v.selected > 0).sort((a,b) => b.selected - a.selected);
+  const palette = ['#d9c17e','#b8933f','#f0d898','#9d7b31','#c9a85a','#e7d4a0','#8d6a22','#f4e7bd'];
+
+  ctx.fillStyle = 'rgba(255,255,255,.06)';
+  ctx.beginPath();
+  ctx.arc(cx, cy, outer, 0, Math.PI * 2);
+  ctx.arc(cx, cy, inner, 0, Math.PI * 2, true);
+  ctx.fill('evenodd');
+
+  if (!active.length) {
+    ctx.fillStyle = '#f5f0df';
+    ctx.textAlign = 'center';
+    ctx.font = '18px sans-serif';
+    ctx.fillText('未選択', cx, cy - 6);
+    ctx.font = '14px sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,.72)';
+    ctx.fillText('症状を選択すると分析が表示されます', cx, cy + 22);
+    return;
+  }
+
+  let start = -Math.PI / 2;
+  active.forEach((item, idx) => {
+    const angle = (item.selected / total) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, outer, start, start + angle);
+    ctx.closePath();
+    ctx.fillStyle = palette[idx % palette.length];
+    ctx.fill();
+    start += angle;
+  });
+
+  ctx.fillStyle = 'rgba(0,0,0,.92)';
+  ctx.beginPath();
+  ctx.arc(cx, cy, inner, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#d9c17e';
+  ctx.font = '14px sans-serif';
+  ctx.fillText('合計チェック数', cx, cy - 28);
+  ctx.font = 'bold 44px sans-serif';
+  ctx.fillText(String(total), cx, cy + 14);
+  ctx.font = '14px sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,.78)';
+  ctx.fillText(currentSeverity(total), cx, cy + 42);
+
+  const legendX = 18;
+  let legendY = cssHeight - 18 - Math.min(active.length, 5) * 22;
+  active.slice(0,5).forEach((item, idx) => {
+    ctx.fillStyle = palette[idx % palette.length];
+    ctx.fillRect(legendX, legendY - 10, 12, 12);
+    ctx.fillStyle = '#f5f0df';
+    ctx.textAlign = 'left';
+    ctx.font = '13px sans-serif';
+    ctx.fillText(`${item.name} ${item.selected}項目`, legendX + 20, legendY);
+    legendY += 22;
+  });
+}
 function renderResult() {
   const count = state.selected.size;
   const name = normalizeName(refs.patientName.value);
@@ -379,7 +508,7 @@ function renderResult() {
       refs.diffLabel.textContent = diffLabel(diff);
       const currentRec = comp.current || createRecord();
       const breakdown = getCategoryBreakdown(new Set(currentRec.selectedItems || []));
-      drawDonutChart(currentRec, comp.prev);
+      drawDonutChart(currentRec);
       refs.analysisSummary.textContent = buildSummaryText(breakdown, currentRec.total || 0);
       refs.comparisonSummary.textContent = buildComparisonText(currentRec, comp.prev);
       renderTopCategoryList(breakdown);
@@ -390,7 +519,7 @@ function renderResult() {
       refs.diffLabel.textContent = '初回';
       const currentRec = comp.current || createRecord();
       const breakdown = getCategoryBreakdown(new Set(currentRec.selectedItems || []));
-      drawDonutChart(currentRec, null);
+      drawDonutChart(currentRec);
       refs.analysisSummary.textContent = buildSummaryText(breakdown, currentRec.total || 0);
       refs.comparisonSummary.textContent = buildComparisonText(currentRec, null);
       renderTopCategoryList(breakdown);
@@ -404,7 +533,7 @@ function renderResult() {
     refs.historyList.innerHTML = '<div class="history-row"><div class="history-meta">保存すると履歴が表示されます。</div></div>';
     const currentRec = createRecord();
     const breakdown = getCategoryBreakdown(new Set(currentRec.selectedItems || []));
-    drawDonutChart(currentRec, null);
+    drawDonutChart(currentRec);
     refs.analysisSummary.textContent = buildSummaryText(breakdown, currentRec.total || 0);
     refs.comparisonSummary.textContent = buildComparisonText(currentRec, null);
     renderTopCategoryList(breakdown);
@@ -614,6 +743,7 @@ setStatus('保存機能・前回比較機能付きで起動しました。');
   function show(){
     refs2.adminSummary.hidden = false;
     if (refs2.adminSummary) refs2.adminSummary.hidden = false;
+    if (refs2.adminSummary) { refs2.adminSummary.hidden = false; refs2.adminSummary.classList.add('admin-visible'); }
     refs2.adminToolbar.hidden = false;
     refs2.adminButtons.hidden = false;
     refs2.resultBtn.hidden = false;
@@ -630,6 +760,7 @@ setStatus('保存機能・前回比較機能付きで起動しました。');
   function hide(){
     refs2.adminSummary.hidden = true;
     if (refs2.adminSummary) refs2.adminSummary.hidden = true;
+    if (refs2.adminSummary) { refs2.adminSummary.hidden = true; refs2.adminSummary.classList.remove('admin-visible'); }
     refs2.adminToolbar.hidden = true;
     refs2.adminButtons.hidden = true;
     refs2.resultBtn.hidden = true;
