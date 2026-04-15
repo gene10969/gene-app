@@ -40,23 +40,7 @@
         </label>
 
       </div>
-
-      <div class="admin-auth-panel">
-        <div class="admin-auth-head">
-          <span>管理者メニュー</span>
-          <button id="adminLogoutBtn" class="btn btn-sub hidden" type="button">管理者を閉じる</button>
-        </div>
-        <div id="adminLockedView" class="admin-locked-view">
-          <p class="admin-note">保存済み患者検索・保存済み患者・患者データを保存・JSON書き出し・JSON読み込み・集計を見る は管理者専用です。</p>
-          <div class="admin-auth-row">
-            <input id="adminPassword" class="admin-password-input" type="password" placeholder="管理者パスワード">
-            <button id="adminUnlockBtn" class="btn btn-sub" type="button">開く</button>
-          </div>
-          <p id="adminAuthStatus" class="admin-auth-status">ロック中</p>
-        </div>
-      </div>
-
-      <div id="adminToolbar" class="toolbar-grid" hidden>
+      <div id="adminToolbar" class="toolbar-grid" hidden> class="toolbar-grid" hidden>
         <label class="field search-field">
           <span>保存済み患者検索</span>
           <input id="patientSearch" type="text" placeholder="名前を入力">
@@ -69,23 +53,7 @@
           <div id="savedPatients" class="saved-patients"></div>
         </div>
       </div>
-
-      <div class="summary-grid">
-        <div class="summary-box">
-          <small>選択数</small>
-          <strong id="selectedCount">0</strong>
-        </div>
-        <div class="summary-box">
-          <small>自動判定</small>
-          <strong id="severityNow">軽度</strong>
-        </div>
-        <div class="summary-box">
-          <small>選択カテゴリ数</small>
-          <strong id="categoryTotal">0</strong>
-        </div>
-      </div>
-
-      <div id="adminButtons" class="button-row" hidden>
+      <div id="adminButtons" class="button-row" hidden> class="button-row" hidden>
         <button id="installBtn" class="btn btn-sub hidden" type="button">ホーム画面に追加</button>
         <button id="saveBtn" class="btn btn-main" type="button">患者データを保存</button>
         <button id="exportBtn" class="btn btn-sub" type="button">JSON書き出し</button>
@@ -96,6 +64,22 @@
       <div class="button-row">
         <button id="resetBtn" class="btn btn-sub" type="button">新規入力</button>
         <button id="resultBtn" class="btn btn-main" type="button" hidden>集計を見る</button>
+      </div>
+
+      
+      <div class="admin-section-wrap">
+        <div class="summary-grid" id="adminSummary" hidden>
+        <div class="summary-box">
+          <small>選択数</small>
+          <strong id="selectedCount">0</strong>
+        </div>
+        
+        <div class="admin-auth-panel">
+        <div class="admin-auth-head">
+          <span>管理者メニュー</span>
+          <button id="adminLogoutBtn" class="btn btn-sub hidden" type="button">管理者を閉じる</button>
+        </div>
+        
       </div>
 
       <p id="statusText" class="status-text">準備完了</p>

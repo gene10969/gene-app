@@ -580,15 +580,18 @@ setStatus('保存機能・前回比較機能付きで起動しました。');
     adminLogoutBtn: document.getElementById('adminLogoutBtn'),
     adminLockedView: document.getElementById('adminLockedView'),
     adminAuthStatus: document.getElementById('adminAuthStatus'),
+  adminSummary: document.getElementById('adminSummary'),
     statusText: document.getElementById('statusText')
   };
   if(Object.values(refs2).some(v => v === null)) return;
   function key(){ return 'gene_admin_unlock_until_verified_v2'; }
   function isUnlocked(){ return Number(localStorage.getItem(key()) || 0) > Date.now(); }
   function show(){
+    refs2.adminSummary.hidden = false;
     refs2.adminToolbar.hidden = false;
     refs2.adminButtons.hidden = false;
     refs2.resultBtn.hidden = false;
+    refs2.adminSummary.classList.add('admin-visible');
     refs2.adminToolbar.classList.add('admin-visible');
     refs2.adminButtons.classList.add('admin-visible');
     refs2.resultBtn.classList.add('admin-visible');
@@ -598,9 +601,11 @@ setStatus('保存機能・前回比較機能付きで起動しました。');
     refs2.adminAuthStatus.textContent = '管理者メニューを開きました。';
   }
   function hide(){
+    refs2.adminSummary.hidden = true;
     refs2.adminToolbar.hidden = true;
     refs2.adminButtons.hidden = true;
     refs2.resultBtn.hidden = true;
+    refs2.adminSummary.classList.remove('admin-visible');
     refs2.adminToolbar.classList.remove('admin-visible');
     refs2.adminButtons.classList.remove('admin-visible');
     refs2.resultBtn.classList.remove('admin-visible');
