@@ -138,14 +138,14 @@ function patientNames() {
 }
 
 function filteredPatientNames() {
-  const q = normalizeName(refs.patientSearch.value).toLowerCase();
+  const q = normalizeName(refs.patientSearch ? refs.patientSearch.value : '').toLowerCase();
   return patientNames().filter(name => !q || name.toLowerCase().includes(q));
 }
 
 function renderPatientChips() {
   const names = filteredPatientNames();
   refs.savedPatients.innerHTML = '';
-  refs.savedCount.textContent = `${patientNames().length}名`;
+  if (refs.savedCount) refs.savedCount.textContent = `${patientNames().length}名`;
   if (!names.length) {
     refs.savedPatients.innerHTML = '<span class="history-meta">保存済み患者はまだありません。</span>';
     return;
@@ -523,7 +523,7 @@ refs.importFile.addEventListener('change', (e) => {
   if (file) importJson(file);
   e.target.value = '';
 });
-refs.patientSearch.addEventListener('input', renderPatientChips);
+if (refs.patientSearch) refs.patientSearch.addEventListener('input', renderPatientChips);
 refs.resultBtn.addEventListener('click', () => {
   renderResult();
   refs.resultSection.hidden = false;
@@ -583,7 +583,7 @@ setStatus('保存機能・前回比較機能付きで起動しました。');
     statusText: document.getElementById('statusText')
   };
   if(Object.values(refs2).some(v => v === null)) return;
-  function key(){ return 'gene_admin_unlock_until_verified_v1'; }
+  function key(){ return 'gene_admin_unlock_until_verified_v2'; }
   function isUnlocked(){ return Number(localStorage.getItem(key()) || 0) > Date.now(); }
   function show(){
     refs2.adminToolbar.hidden = false;
@@ -632,3 +632,7 @@ setStatus('保存機能・前回比較機能付きで起動しました。');
   apply();
   window.addEventListener('pageshow', apply);
 })();
+
+
+// final runtime marker
+try { console.log('gene admin lock final fix loaded'); } catch (e) {}
