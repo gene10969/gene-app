@@ -186,10 +186,28 @@
 
       <div class="chart-card">
         <div class="section-head mini">
-          <h3>カテゴリ別グラフ</h3>
-          <p>今回 / 前回 / 総項目数</p>
+          <h3>詳細分析</h3>
+          <p>丸形チャート / 文章解説</p>
         </div>
-        <canvas id="barChart" width="1200" height="1000"></canvas>
+        <div class="analysis-grid">
+          <div class="donut-wrap">
+            <canvas id="donutChart" width="720" height="720"></canvas>
+          </div>
+          <div class="analysis-text">
+            <div class="analysis-block">
+              <h4>今回の傾向</h4>
+              <p id="analysisSummary">選択された項目から、現在の傾向を整理して表示します。</p>
+            </div>
+            <div class="analysis-block">
+              <h4>重点カテゴリ</h4>
+              <div id="topCategoryList" class="top-category-list"></div>
+            </div>
+            <div class="analysis-block">
+              <h4>前回比較</h4>
+              <p id="comparisonSummary">前回データがある場合に、増減を文章で表示します。</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="history-card">

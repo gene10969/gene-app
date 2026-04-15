@@ -41,7 +41,10 @@ const refs = {
   diffTotal: $('diffTotal'),
   diffLabel: $('diffLabel'),
   judgeComment: $('judgeComment'),
-  barChart: $('barChart'),
+  donutChart: $('donutChart'),
+  analysisSummary: $('analysisSummary'),
+  topCategoryList: $('topCategoryList'),
+  comparisonSummary: $('comparisonSummary'),
   historyList: $('historyList'),
   historyMeta: $('historyMeta'),
   selectedList: $('selectedList'),
@@ -374,13 +377,23 @@ function renderResult() {
       const diff = count - comp.prev.total;
       refs.diffTotal.textContent = diffText(diff);
       refs.diffLabel.textContent = diffLabel(diff);
-      drawChart(comp.current || createRecord(), comp.prev);
+      const currentRec = comp.current || createRecord();
+      const breakdown = getCategoryBreakdown(new Set(currentRec.selectedItems || []));
+      drawDonutChart(currentRec, comp.prev);
+      refs.analysisSummary.textContent = buildSummaryText(breakdown, currentRec.total || 0);
+      refs.comparisonSummary.textContent = buildComparisonText(currentRec, comp.prev);
+      renderTopCategoryList(breakdown);
     } else {
       refs.prevDate.textContent = '-';
       refs.prevTotal.textContent = '-';
       refs.diffTotal.textContent = '-';
       refs.diffLabel.textContent = '初回';
-      drawChart(comp.current || createRecord(), null);
+      const currentRec = comp.current || createRecord();
+      const breakdown = getCategoryBreakdown(new Set(currentRec.selectedItems || []));
+      drawDonutChart(currentRec, null);
+      refs.analysisSummary.textContent = buildSummaryText(breakdown, currentRec.total || 0);
+      refs.comparisonSummary.textContent = buildComparisonText(currentRec, null);
+      renderTopCategoryList(breakdown);
     }
   } else {
     refs.prevDate.textContent = '-';
@@ -389,11 +402,16 @@ function renderResult() {
     refs.diffLabel.textContent = '未保存';
     refs.historyMeta.textContent = '0件';
     refs.historyList.innerHTML = '<div class="history-row"><div class="history-meta">保存すると履歴が表示されます。</div></div>';
-    drawChart(createRecord(), null);
+    const currentRec = createRecord();
+    const breakdown = getCategoryBreakdown(new Set(currentRec.selectedItems || []));
+    drawDonutChart(currentRec, null);
+    refs.analysisSummary.textContent = buildSummaryText(breakdown, currentRec.total || 0);
+    refs.comparisonSummary.textContent = buildComparisonText(currentRec, null);
+    renderTopCategoryList(breakdown);
   }
 }
 
-function drawChart(currentRecord, prevRecord) {
+function __unused_drawChart(currentRecord, prevRecord) {
   const canvas = refs.barChart;
   const ctx = canvas.getContext('2d');
   const dpr = window.devicePixelRatio || 1;
